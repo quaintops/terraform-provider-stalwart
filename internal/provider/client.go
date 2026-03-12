@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
@@ -126,7 +127,7 @@ func (c *Client) CreatePrincipal(ctx context.Context, p *Principal) (int64, erro
 }
 
 func (c *Client) GetPrincipal(ctx context.Context, name string) (*Principal, error) {
-	body, status, err := c.do(ctx, "GET", "/principal/"+name, nil)
+	body, status, err := c.do(ctx, "GET", "/principal/"+url.PathEscape(name), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +147,7 @@ func (c *Client) GetPrincipal(ctx context.Context, name string) (*Principal, err
 }
 
 func (c *Client) UpdatePrincipal(ctx context.Context, name string, ops []PatchOp) error {
-	body, status, err := c.do(ctx, "PATCH", "/principal/"+name, ops)
+	body, status, err := c.do(ctx, "PATCH", "/principal/"+url.PathEscape(name), ops)
 	if err != nil {
 		return err
 	}
@@ -157,7 +158,7 @@ func (c *Client) UpdatePrincipal(ctx context.Context, name string, ops []PatchOp
 }
 
 func (c *Client) DeletePrincipal(ctx context.Context, name string) error {
-	body, status, err := c.do(ctx, "DELETE", "/principal/"+name, nil)
+	body, status, err := c.do(ctx, "DELETE", "/principal/"+url.PathEscape(name), nil)
 	if err != nil {
 		return err
 	}
@@ -237,7 +238,7 @@ func (c *Client) CreateDKIM(ctx context.Context, req DKIMRequest) ([]DNSRecord, 
 }
 
 func (c *Client) GetDNSRecords(ctx context.Context, domain string) ([]DNSRecord, error) {
-	body, status, err := c.do(ctx, "GET", "/dns/records/"+domain, nil)
+	body, status, err := c.do(ctx, "GET", "/dns/records/"+url.PathEscape(domain), nil)
 	if err != nil {
 		return nil, err
 	}

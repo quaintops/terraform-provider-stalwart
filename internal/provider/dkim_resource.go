@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -136,8 +137,12 @@ func (r *DKIMResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 
 	records, err := r.client.GetDNSRecords(ctx, state.Domain.ValueString())
 	if err != nil {
-		// If the domain itself is gone, remove the resource from state.
-		resp.State.RemoveResource(ctx)
+		var nf ErrNotFound
+		if errors.As(err, &nf) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		resp.Diagnostics.AddError("Failed to read DKIM DNS records", err.Error())
 		return
 	}
 

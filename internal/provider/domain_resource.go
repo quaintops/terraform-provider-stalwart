@@ -85,7 +85,15 @@ func (r *DomainResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
+	// Read back so that Computed attributes (description) are resolved.
+	p, err := r.client.GetPrincipal(ctx, plan.Name.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to read domain after create", err.Error())
+		return
+	}
+
 	plan.ID = plan.Name
+	plan.Description = types.StringValue(p.Description)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 

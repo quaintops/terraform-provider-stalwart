@@ -12,6 +12,27 @@ import (
 	"strings"
 )
 
+// FlexibleStringSlice unmarshals a JSON value that may be either a []string
+// (for groups/lists) or a number (for domains/tenants where Stalwart returns
+// a member count). When the value is a number it is silently discarded.
+type FlexibleStringSlice []string
+
+func (f *FlexibleStringSlice) UnmarshalJSON(data []byte) error {
+	// Try []string first (the common case for groups/lists).
+	var ss []string
+	if err := json.Unmarshal(data, &ss); err == nil {
+		*f = ss
+		return nil
+	}
+	// Stalwart returns a bare integer for domain/tenant member counts — ignore it.
+	var n json.Number
+	if err := json.Unmarshal(data, &n); err == nil {
+		*f = nil
+		return nil
+	}
+	return fmt.Errorf("members: expected []string or number, got %s", string(data))
+}
+
 type Client struct {
 	baseURL    string
 	httpClient *http.Client
@@ -45,7 +66,7 @@ type Principal struct {
 	Secrets             []string `json:"secrets,omitempty"`
 	Emails              []string `json:"emails,omitempty"`
 	Roles               []string `json:"roles,omitempty"`
-	Members             []string `json:"members,omitempty"`
+	Members             FlexibleStringSlice `json:"members,omitempty"`
 	MemberOf            []string `json:"memberOf,omitempty"`
 	Lists               []string `json:"lists,omitempty"`
 	ExternalMembers     []string `json:"externalMembers,omitempty"`
